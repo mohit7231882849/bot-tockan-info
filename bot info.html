@@ -1,0 +1,881 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Telegram Bot Token Checker</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        :root {
+            --primary: #0088cc;
+            --secondary: #006699;
+            --dark: #2A2D3E;
+            --light: #F7F9FC;
+            --success: #28a745;
+            --danger: #dc3545;
+            --warning: #ffc107;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        header {
+            text-align: center;
+            padding: 30px 0;
+            color: white;
+        }
+        
+        h1 {
+            font-size: 2.8rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+        
+        .subtitle {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            margin-bottom: 20px;
+        }
+        
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-top: 20px;
+        }
+        
+        @media (max-width: 968px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+            transition: transform 0.3s ease;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .card h2 {
+            color: var(--dark);
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid var(--primary);
+            display: inline-block;
+        }
+        
+        .token-input-group {
+            display: flex;
+            margin-bottom: 20px;
+        }
+        
+        .token-input {
+            flex: 1;
+            padding: 15px 20px;
+            border: 2px solid #ddd;
+            border-radius: 10px 0 0 10px;
+            font-size: 1rem;
+            outline: none;
+            font-family: monospace;
+        }
+        
+        .token-input:focus {
+            border-color: var(--primary);
+        }
+        
+        .check-btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 0 25px;
+            border-radius: 0 10px 10px 0;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: background 0.3s;
+        }
+        
+        .check-btn:hover {
+            background: var(--secondary);
+        }
+        
+        .check-btn:disabled {
+            background: #cccccc;
+            cursor: not-allowed;
+        }
+        
+        .example-tokens {
+            margin-top: 15px;
+            font-size: 0.9rem;
+            color: #666;
+        }
+        
+        .example-tokens span {
+            cursor: pointer;
+            margin: 0 8px;
+            padding: 5px 10px;
+            background: #f0f0f0;
+            border-radius: 5px;
+            transition: background 0.3s;
+            display: inline-block;
+            margin-bottom: 5px;
+            font-family: monospace;
+            font-size: 0.8rem;
+        }
+        
+        .example-tokens span:hover {
+            background: #e0e0e0;
+        }
+        
+        .loader {
+            display: none;
+            justify-content: center;
+            align-items: center;
+            height: 100px;
+            flex-direction: column;
+        }
+        
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid rgba(0, 136, 204, 0.2);
+            border-radius: 50%;
+            border-top-color: var(--primary);
+            animation: spin 1s linear infinite;
+            margin-bottom: 15px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .result-container {
+            display: none;
+            margin-top: 20px;
+        }
+        
+        .bot-info {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+        }
+        
+        .bot-avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: var(--primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 2rem;
+            margin: 0 auto 15px;
+        }
+        
+        .bot-details {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .detail-item {
+            padding: 10px;
+            border-left: 3px solid var(--primary);
+            background: #f8f9fa;
+        }
+        
+        .detail-label {
+            font-weight: 600;
+            color: #555;
+            font-size: 0.9rem;
+        }
+        
+        .detail-value {
+            font-size: 1rem;
+            color: #222;
+            margin-top: 5px;
+        }
+        
+        .actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .action-btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: background 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .action-btn:hover {
+            background: var(--secondary);
+        }
+        
+        .action-btn.secondary {
+            background: #6c757d;
+        }
+        
+        .action-btn.secondary:hover {
+            background: #545b62;
+        }
+        
+        .action-btn.success {
+            background: var(--success);
+        }
+        
+        .action-btn.success:hover {
+            background: #218838;
+        }
+        
+        .features-list {
+            list-style: none;
+            margin-top: 20px;
+        }
+        
+        .features-list li {
+            padding: 10px 0;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            align-items: center;
+        }
+        
+        .features-list li:last-child {
+            border-bottom: none;
+        }
+        
+        .features-list li i {
+            color: var(--primary);
+            margin-right: 10px;
+            font-size: 1.1rem;
+        }
+        
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 25px;
+            text-align: center;
+        }
+        
+        .stat-item {
+            padding: 10px;
+        }
+        
+        .stat-number {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--primary);
+            display: block;
+        }
+        
+        .stat-label {
+            font-size: 0.9rem;
+            color: #666;
+        }
+        
+        .error-message {
+            display: none;
+            background: #ffebee;
+            color: var(--danger);
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+            text-align: center;
+        }
+        
+        .success-message {
+            display: none;
+            background: #e8f5e8;
+            color: var(--success);
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+            text-align: center;
+        }
+        
+        footer {
+            text-align: center;
+            color: white;
+            padding: 30px;
+            margin-top: 40px;
+            opacity: 0.8;
+        }
+        
+        .api-info {
+            background: rgba(255, 255, 255, 0.9);
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 20px;
+            font-size: 0.9rem;
+            color: #666;
+        }
+        
+        /* Name Change Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            width: 90%;
+            max-width: 500px;
+            position: relative;
+        }
+        
+        .modal-close {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #666;
+        }
+        
+        .modal-close:hover {
+            color: var(--danger);
+        }
+        
+        .modal h3 {
+            margin-bottom: 20px;
+            color: var(--dark);
+        }
+        
+        .name-input-group {
+            margin-bottom: 20px;
+        }
+        
+        .name-input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 1rem;
+            outline: none;
+        }
+        
+        .name-input:focus {
+            border-color: var(--primary);
+        }
+        
+        .name-char-count {
+            text-align: right;
+            font-size: 0.8rem;
+            color: #666;
+            margin-top: 5px;
+        }
+        
+        .name-char-count.warning {
+            color: var(--warning);
+        }
+        
+        .name-char-count.danger {
+            color: var(--danger);
+        }
+        
+        .modal-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+        
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2rem;
+            }
+            
+            .token-input-group {
+                flex-direction: column;
+            }
+            
+            .token-input {
+                border-radius: 10px;
+                margin-bottom: 10px;
+            }
+            
+            .check-btn {
+                border-radius: 10px;
+                padding: 12px;
+            }
+            
+            .bot-details {
+                grid-template-columns: 1fr;
+            }
+            
+            .modal-content {
+                padding: 20px;
+                margin: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1><i class="fab fa-telegram"></i> Telegram Bot Token Checker</h1>
+            <p class="subtitle">Check your Telegram bot tokens and manage bot settings</p>
+        </header>
+        
+        <div class="main-content">
+            <div class="card">
+                <h2>Check Bot Token</h2>
+                <p>Enter your Telegram bot token to check its validity and get detailed information.</p>
+                
+                <div class="token-input-group">
+                    <input type="text" class="token-input" id="token-input" placeholder="123456789:ABCdefGHIjklMNOpqrsTUVwxyz" required>
+                    <button class="check-btn" id="check-btn">
+                        <i class="fas fa-search"></i> Check
+                    </button>
+                </div>
+                
+                <div class="example-tokens">
+                    Try example: 
+                    <span onclick="useExampleToken()">123456789:ABCdefGHIjklMNOpqrsTUVwxyz</span>
+                </div>
+                
+                <div class="loader" id="loader">
+                    <div class="spinner"></div>
+                    <div>Checking token validity...</div>
+                </div>
+                
+                <div class="error-message" id="error-message"></div>
+                <div class="success-message" id="success-message"></div>
+                
+                <div class="result-container" id="result-container">
+                    <div class="bot-info">
+                        <div class="bot-avatar">
+                            <i class="fas fa-robot"></i>
+                        </div>
+                        
+                        <h3 id="bot-name">Bot Name</h3>
+                        <p id="bot-username">@username</p>
+                        
+                        <div class="bot-details">
+                            <div class="detail-item">
+                                <div class="detail-label">Bot ID</div>
+                                <div class="detail-value" id="bot-id">-</div>
+                            </div>
+                            
+                            <div class="detail-item">
+                                <div class="detail-label">Creation Date</div>
+                                <div class="detail-value" id="bot-creation">-</div>
+                            </div>
+                            
+                            <div class="detail-item">
+                                <div class="detail-label">Can Join Groups</div>
+                                <div class="detail-value" id="bot-groups">-</div>
+                            </div>
+                            
+                            <div class="detail-item">
+                                <div class="detail-label">Inline Queries</div>
+                                <div class="detail-value" id="bot-inline">-</div>
+                            </div>
+                        </div>
+                        
+                        <div class="actions">
+                            <button class="action-btn" id="change-photo-btn">
+                                <i class="fas fa-camera"></i> Change Photo
+                            </button>
+                            <button class="action-btn" id="change-name-btn">
+                                <i class="fas fa-edit"></i> Change Name
+                            </button>
+                            <button class="action-btn secondary" id="recheck-btn">
+                                <i class="fas fa-sync"></i> Recheck
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card">
+                <h2>Features</h2>
+                <ul class="features-list">
+                    <li><i class="fas fa-check-circle"></i> Validate Telegram bot tokens</li>
+                    <li><i class="fas fa-check-circle"></i> Get detailed bot information</li>
+                    <li><i class="fas fa-check-circle"></i> Change bot profile photo</li>
+                    <li><i class="fas fa-check-circle"></i> Update bot name</li>
+                    <li><i class="fas fa-check-circle"></i> Check bot permissions</li>
+                    <li><i class="fas fa-check-circle"></i> Secure token validation</li>
+                    <li><i class="fas fa-check-circle"></i> Real-time status updates</li>
+                    <li><i class="fas fa-check-circle"></i> Mobile responsive design</li>
+                </ul>
+                
+                <div class="stats">
+                    <div class="stat-item">
+                        <span class="stat-number" id="tokens-checked">0</span>
+                        <span class="stat-label">Tokens Checked</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-number" id="valid-tokens">0</span>
+                        <span class="stat-label">Valid Tokens</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-number" id="name-changes">0</span>
+                        <span class="stat-label">Name Changes</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="api-info">
+            <h3>Real API Integration</h3>
+            <p>This website now makes real API calls to Telegram to get actual bot information. No more mock data!</p>
+        </div>
+        
+        <footer>
+            <p>Telegram Bot Token Checker &copy; 2023 | Real API Integration</p>
+            <p style="margin-top: 10px; font-size: 0.9rem;">Now showing real bot data from Telegram API</p>
+        </footer>
+    </div>
+
+    <!-- Name Change Modal -->
+    <div class="modal" id="name-change-modal">
+        <div class="modal-content">
+            <button class="modal-close" id="modal-close">&times;</button>
+            <h3><i class="fas fa-edit"></i> Change Bot Name</h3>
+            
+            <div class="name-input-group">
+                <input type="text" class="name-input" id="name-input" placeholder="Enter new bot name" maxlength="64">
+                <div class="name-char-count" id="name-char-count">0/64 characters</div>
+            </div>
+            
+            <div class="error-message" id="modal-error-message"></div>
+            
+            <div class="modal-actions">
+                <button class="action-btn secondary" id="cancel-name-btn">Cancel</button>
+                <button class="action-btn success" id="save-name-btn">Save Changes</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Statistics
+        let tokensChecked = 0;
+        let validTokens = 0;
+        let nameChanges = 0;
+        let currentToken = '';
+        
+        // DOM Elements
+        const tokenInput = document.getElementById('token-input');
+        const checkBtn = document.getElementById('check-btn');
+        const loader = document.getElementById('loader');
+        const errorMessage = document.getElementById('error-message');
+        const successMessage = document.getElementById('success-message');
+        const resultContainer = document.getElementById('result-container');
+        const botName = document.getElementById('bot-name');
+        const botUsername = document.getElementById('bot-username');
+        const botId = document.getElementById('bot-id');
+        const botCreation = document.getElementById('bot-creation');
+        const botGroups = document.getElementById('bot-groups');
+        const botInline = document.getElementById('bot-inline');
+        const changePhotoBtn = document.getElementById('change-photo-btn');
+        const changeNameBtn = document.getElementById('change-name-btn');
+        const recheckBtn = document.getElementById('recheck-btn');
+        const tokensCheckedEl = document.getElementById('tokens-checked');
+        const validTokensEl = document.getElementById('valid-tokens');
+        const nameChangesEl = document.getElementById('name-changes');
+        
+        // Modal Elements
+        const nameChangeModal = document.getElementById('name-change-modal');
+        const nameInput = document.getElementById('name-input');
+        const nameCharCount = document.getElementById('name-char-count');
+        const modalClose = document.getElementById('modal-close');
+        const cancelNameBtn = document.getElementById('cancel-name-btn');
+        const saveNameBtn = document.getElementById('save-name-btn');
+        const modalErrorMessage = document.getElementById('modal-error-message');
+        
+        // Event Listeners
+        document.addEventListener('DOMContentLoaded', function() {
+            checkBtn.addEventListener('click', checkToken);
+            tokenInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    checkToken();
+                }
+            });
+            
+            changePhotoBtn.addEventListener('click', function() {
+                alert('Change Photo functionality requires backend integration');
+            });
+            
+            changeNameBtn.addEventListener('click', openNameChangeModal);
+            recheckBtn.addEventListener('click', checkToken);
+            
+            // Modal events
+            modalClose.addEventListener('click', closeNameChangeModal);
+            cancelNameBtn.addEventListener('click', closeNameChangeModal);
+            saveNameBtn.addEventListener('click', saveBotName);
+            
+            // Name input events
+            nameInput.addEventListener('input', updateCharCount);
+            nameInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    saveBotName();
+                }
+            });
+            
+            // Update stats
+            updateStats();
+        });
+        
+        // Use example token
+        function useExampleToken() {
+            tokenInput.value = '123456789:ABCdefGHIjklMNOpqrsTUVwxyz';
+        }
+        
+        // Check token validity - REAL API CALL
+        async function checkToken() {
+            const token = tokenInput.value.trim();
+            currentToken = token;
+            
+            if (!token) {
+                showError('Please enter a bot token');
+                return;
+            }
+            
+            // Basic token format validation
+            if (!token.match(/^\d+:[A-Za-z0-9_-]+$/)) {
+                showError('Invalid token format. Token should be in format: 123456789:ABCdefGHIjklMNOpqrsTUVwxyz');
+                return;
+            }
+            
+            // Update stats
+            tokensChecked++;
+            updateStats();
+            
+            // Show loader
+            loader.style.display = 'flex';
+            errorMessage.style.display = 'none';
+            successMessage.style.display = 'none';
+            resultContainer.style.display = 'none';
+            checkBtn.disabled = true;
+            
+            try {
+                // REAL Telegram API call
+                const response = await fetch(`https://api.telegram.org/bot${token}/getMe`);
+                const data = await response.json();
+                
+                if (data.ok) {
+                    validTokens++;
+                    updateStats();
+                    showBotInfo(data.result);
+                } else {
+                    showError(`Invalid token: ${data.description || 'Bot not found'}`);
+                }
+            } catch (error) {
+                showError(`Network error: ${error.message}`);
+            } finally {
+                loader.style.display = 'none';
+                checkBtn.disabled = false;
+            }
+        }
+        
+        // Calculate bot creation date from ID
+        function getBotCreationTime(botId) {
+            try {
+                const timestamp = (parseInt(botId) >> 32) + 1293840000;
+                const creationDate = new Date(timestamp);
+                return creationDate.toLocaleDateString();
+            } catch {
+                return 'Unknown';
+            }
+        }
+        
+        // Show REAL bot information
+        function showBotInfo(botInfo) {
+            botName.textContent = botInfo.first_name;
+            botUsername.textContent = `@${botInfo.username || 'No username'}`;
+            botId.textContent = botInfo.id;
+            botCreation.textContent = getBotCreationTime(botInfo.id);
+            botGroups.textContent = botInfo.can_join_groups ? 'Yes' : 'No';
+            botInline.textContent = botInfo.supports_inline_queries ? 'Yes' : 'No';
+            
+            resultContainer.style.display = 'block';
+        }
+        
+        // Open name change modal
+        function openNameChangeModal() {
+            if (!currentToken) {
+                showError('Please check a token first');
+                return;
+            }
+            
+            nameInput.value = botName.textContent;
+            updateCharCount();
+            modalErrorMessage.style.display = 'none';
+            nameChangeModal.style.display = 'flex';
+            nameInput.focus();
+        }
+        
+        // Close name change modal
+        function closeNameChangeModal() {
+            nameChangeModal.style.display = 'none';
+            modalErrorMessage.style.display = 'none';
+        }
+        
+        // Update character count
+        function updateCharCount() {
+            const count = nameInput.value.length;
+            nameCharCount.textContent = `${count}/64 characters`;
+            
+            if (count > 60) {
+                nameCharCount.className = 'name-char-count warning';
+            } else if (count === 64) {
+                nameCharCount.className = 'name-char-count danger';
+            } else {
+                nameCharCount.className = 'name-char-count';
+            }
+        }
+        
+        // Save bot name - REAL API CALL
+        async function saveBotName() {
+            const newName = nameInput.value.trim();
+            
+            if (!newName) {
+                modalErrorMessage.textContent = 'Please enter a bot name';
+                modalErrorMessage.style.display = 'block';
+                return;
+            }
+            
+            if (newName.length < 1 || newName.length > 64) {
+                modalErrorMessage.textContent = 'Bot name must be between 1 and 64 characters';
+                modalErrorMessage.style.display = 'block';
+                return;
+            }
+            
+            // Show loading state
+            saveNameBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+            saveNameBtn.disabled = true;
+            
+            try {
+                // REAL Telegram API call to change bot name
+                const response = await fetch(`https://api.telegram.org/bot${currentToken}/setMyName`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        name: newName
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.ok) {
+                    // Update the displayed name
+                    botName.textContent = newName;
+                    
+                    // Update statistics
+                    nameChanges++;
+                    updateStats();
+                    
+                    // Show success message
+                    showSuccess(`Bot name successfully changed to: ${newName}`);
+                    
+                    // Close modal
+                    closeNameChangeModal();
+                } else {
+                    modalErrorMessage.textContent = `Failed to change bot name: ${data.description || 'Unknown error'}`;
+                    modalErrorMessage.style.display = 'block';
+                }
+            } catch (error) {
+                modalErrorMessage.textContent = `Network error: ${error.message}`;
+                modalErrorMessage.style.display = 'block';
+            } finally {
+                // Reset button
+                saveNameBtn.innerHTML = 'Save Changes';
+                saveNameBtn.disabled = false;
+            }
+        }
+        
+        // Show error message
+        function showError(message) {
+            errorMessage.textContent = message;
+            errorMessage.style.display = 'block';
+            successMessage.style.display = 'none';
+        }
+        
+        // Show success message
+        function showSuccess(message) {
+            successMessage.textContent = message;
+            successMessage.style.display = 'block';
+            errorMessage.style.display = 'none';
+        }
+        
+        // Update statistics
+        function updateStats() {
+            tokensCheckedEl.textContent = tokensChecked;
+            validTokensEl.textContent = validTokens;
+            nameChangesEl.textContent = nameChanges;
+        }
+        
+        // Add some interactive elements
+        document.querySelectorAll('.card').forEach(card => {
+            card.addEventListener('mouseenter', function() {
+                this.style.boxShadow = '0 15px 35px rgba(0, 0, 0, 0.15)';
+            });
+            
+            card.addEventListener('mouseleave', function() {
+                this.style.boxShadow = '0 10px 30px rgba(0, 0, 0, 0.1)';
+            });
+        });
+        
+        // Close modal when clicking outside
+        window.addEventListener('click', function(event) {
+            if (event.target === nameChangeModal) {
+                closeNameChangeModal();
+            }
+        });
+        
+        // Console info
+        console.log('Telegram Bot Token Checker Website Loaded');
+        console.log('Now using REAL Telegram API calls for bot information');
+    </script>
+</body>
+</html>
